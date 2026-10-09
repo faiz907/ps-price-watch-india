@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101114">
+<meta name="description" content="Track Indian PlayStation Store prices, lows and sale alerts.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<title>PS Price Watch India</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#191b21;--panel2:#22252d;--text:#f5f6fa;--muted:#a5a8b3;--line:#30333d;--accent:#9b8cff;--green:#69d7a4;--red:#ff8b8b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#20202e 0,var(--bg) 45%);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:25px 18px 18px;max-width:980px;margin:auto} .eyebrow{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+h1{font-size:clamp(27px,5vw,40px);line-height:1.08;margin:8px 0}p{margin:8px 0;color:var(--muted)}main{max-width:980px;margin:auto;padding:0 16px 50px}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 20px}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 13px;border-radius:12px;font-weight:700;cursor:pointer}.btn.primary{background:var(--accent);border-color:var(--accent);color:#14121e}.btn:active{transform:scale(.98)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px}.stat,.card,.section{background:rgba(25,27,33,.94);border:1px solid var(--line);border-radius:17px;padding:15px}.stat span{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;font-size:23px;margin-top:4px}
+.section{margin:14px 0}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.section h2{font-size:17px;margin:0}.search{width:100%;padding:12px;border-radius:11px;border:1px solid var(--line);background:#111217;color:var(--text);margin:0 0 12px}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));gap:11px}.game{background:linear-gradient(145deg,#22242c,#17181e);border:1px solid var(--line);border-radius:16px;padding:15px;min-width:0}.game-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.game h3{margin:0;font-size:17px}.platform{color:var(--muted);font-size:12px;margin-top:4px}.price{font-size:26px;font-weight:850;letter-spacing:-.04em;margin:14px 0 0}.old{font-size:12px;color:var(--muted);text-decoration:line-through;margin-left:6px}.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.fact{background:#111217;border-radius:10px;padding:9px}.fact small{display:block;color:var(--muted);font-size:11px}.fact b{font-size:13px}.tag{border-radius:100px;padding:4px 8px;font-size:10px;font-weight:800;background:#2c2940;color:#c6bcff;white-space:nowrap}.tag.good{background:#18372d;color:var(--green)}.tag.warn{background:#3a2829;color:#ffb1b1}
+.game-actions{display:flex;gap:7px;flex-wrap:wrap}.game-actions .btn{font-size:12px;padding:8px 10px}
+.empty{padding:24px;text-align:center;color:var(--muted)}.note{font-size:12px;color:var(--muted)}label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#101116;color:var(--text)}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.formgrid .wide{grid-column:1/-1}dialog{border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--text);width:min(520px,calc(100% - 28px));padding:20px}dialog::backdrop{background:#000b}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.history-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);gap:12px}.history-row:last-child{border-bottom:0}
+footer{max-width:980px;margin:auto;padding:0 16px 35px;color:var(--muted);font-size:12px}
+@media(max-width:460px){.stats{gap:7px}.stat{padding:11px}.stat strong{font-size:19px}.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">PlayStation Store · India</div>
+  <h1>PS Price Watch</h1>
+  <p>Your wishlist, historical lows and price-drop alerts — in one dark dashboard.</p>
+  <div class="toolbar">
+    <button class="btn primary" id="addBtn">＋ Add a game</button>
+    <button class="btn" id="notifyBtn">♧ Enable alerts</button>
+    <button class="btn" id="exportBtn">Export data</button>
+    <button class="btn" id="importBtn">Import data</button>
+    <input type="file" id="importFile" accept="application/json" hidden>
+  </div>
+</header>
+<main>
+  <div class="stats">
+    <div class="stat"><span>Wishlist</span><strong id="statGames">0 games</strong></div>
+    <div class="stat"><span>On sale / below target</span><strong id="statDeals">0</strong></div>
+    <div class="stat"><span>Alerts enabled</span><strong id="statAlerts">Off</strong></div>
+  </div>
+  <section class="section">
+    <div class="section-head"><h2>Your games</h2><span class="note" id="updatedLabel">Saved on this device</span></div>
+    <input class="search" id="search" placeholder="Search your wishlist…">
+    <div class="games" id="games"></div>
+    <div class="note" style="margin-top:12px">Prices and historical lows are only as accurate as the entries you add. This prototype does not scrape or automatically fetch live PS Store prices.</div>
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>How alerts work</h2></div>
+    <p>Set a target price for each game. When you update its current price below that target, the app flags the deal and can send a browser notification if notifications are supported and permission is granted.</p>
+    <p class="note">Automatic background alerts require a reliable price-data source and a hosted backend or scheduled service. This local prototype cannot independently monitor the PS Store while closed.</p>
+  </section>
+</main>
+<footer>Unofficial fan-made utility. Not affiliated with Sony Interactive Entertainment. Prices in INR. Your data stays in this browser unless you export it.</footer>
+
+<dialog id="gameDialog">
+  <form id="gameForm">
+    <h2 id="dialogTitle">Add a game</h2>
+    <input id="gameId" type="hidden">
+    <div class="formgrid">
+      <div class="wide"><label for="name">Game title</label><input id="name" required placeholder="e.g. Elden Ring"></div>
+      <div><label for="platform">Edition / platform</label><select id="platform"><option>PS5</option><option>PS4</option><option>PS4 + PS5</option></select></div>
+      <div><label for="current">Current price (₹)</label><input id="current" type="number" min="0" step="1" required placeholder="3499"></div>
+      <div><label for="low">Historical low (₹)</label><input id="low" type="number" min="0" step="1" placeholder="2099"></div>
+      <div><label for="target">Alert me at / below (₹)</label><input id="target" type="number" min="0" step="1" placeholder="2000"></div>
+      <div class="wide"><label for="url">Indian PS Store link (optional)</label><input id="url" type="url" placeholder="https://store.playstation.com/en-in/..."></div>
+    </div>
+    <p class="note">Historical low is user-entered, not verified automatically. You can update the current price whenever you check the Store.</p>
+    <div class="dialog-actions"><button type="button" class="btn" id="cancelBtn">Cancel</button><button class="btn primary" type="submit">Save game</button></div>
+  </form>
+</dialog>
+<dialog id="historyDialog">
+  <h2 id="historyTitle">Price history</h2><div id="historyContent"></div>
+  <div class="dialog-actions"><button class="btn" id="closeHistory">Close</button></div>
+</dialog>
+<script>
+const KEY='ps-price-watch-in-v1';
+const $=id=>document.getElementById(id);
+let games=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch{return []}}
+function save(){localStorage.setItem(KEY,JSON.stringify(games));render()}
+function money(n){return n==null||n===''?'—':'₹'+Number(n).toLocaleString('en-IN')}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function below(g){return g.target>0&&g.current<=g.target}
+function render(){
+ const q=$('search').value.toLowerCase();
+ const visible=games.filter(g=>g.name.toLowerCase().includes(q));
+ $('statGames').textContent=games.length+' games';
+ $('statDeals').textContent=games.filter(below).length;
+ $('statAlerts').textContent=('Notification' in window&&Notification.permission==='granted')?'On':'Off';
+ $('updatedLabel').textContent='Saved on this device';
+ $('games').innerHTML=visible.length?visible.map(g=>{
+ const deal=below(g),isLow=g.low>0&&Number(g.current)<=Number(g.low);
+ return `<article class="game"><div class="game-top"><div><h3>${escapeHtml(g.name)}</h3><div class="platform">${escapeHtml(g.platform||'PS5')}</div></div><span class="tag ${deal||isLow?'good':''}">${deal?'TARGET HIT':isLow?'AT HISTORICAL LOW':'WATCHING'}</span></div>
+ <div class="price">${money(g.current)} ${g.previous!=null&&g.previous!==g.current?`<span class="old">${money(g.previous)}</span>`:''}</div>
+ <div class="facts"><div class="fact"><small>Historical low</small><b>${money(g.low)}</b></div><div class="fact"><small>Your target</small><b>${money(g.target)}</b></div></div>
+ <div class="game-actions">${g.url?`<button class="btn" data-action="store" data-id="${g.id}">Open Store ↗</button>`:''}<button class="btn" data-action="price" data-id="${g.id}">Update price</button><button class="btn" data-action="history" data-id="${g.id}">History</button><button class="btn" data-action="edit" data-id="${g.id}">Edit</button><button class="btn" data-action="delete" data-id="${g.id}">Remove</button></div></article>`
+ }).join(''):'<div class="empty">No games yet. Tap <b>Add a game</b> to start your wishlist.</div>';
+}
+function openForm(g){
+ $('gameForm').reset();$('gameId').value=g?.id||'';$('dialogTitle').textContent=g?'Edit game':'Add a game';
+ if(g){$('name').value=g.name;$('platform').value=g.platform||'PS5';$('current').value=g.current;$('low').value=g.low??'';$('target').value=g.target??'';$('url').value=g.url||''}
+ $('gameDialog').showModal()
+}
+$('addBtn').onclick=()=>openForm();$('cancelBtn').onclick=()=>$('gameDialog').close();
+$('gameForm').onsubmit=e=>{
+ e.preventDefault();const id=$('gameId').value||crypto.randomUUID();const old=games.find(g=>g.id===id);
+ const current=Number($('current').value),g={id,name:$('name').value.trim(),platform:$('platform').value,current,low:Number($('low').value)||0,target:Number($('target').value)||0,url:$('url').value.trim(),history:old?.history||[],previous:old?.current??null};
+ if(old){g.history.push({date:new Date().toISOString(),price:old.current})}
+ g.history.push({date:new Date().toISOString(),price:current});
+ if(!g.low||current<g.low)g.low=current;
+ if(!old&&g.target>0&&current<=g.target)g.history.push({date:new Date().toISOString(),event:'Target already met'});
+ games=games.filter(x=>x.id!==id);games.unshift(g);save();$('gameDialog').close();
+ if(below(g))notifyDeal(g);
+};
+function notifyDeal(g){if('Notification'in window&&Notification.permission==='granted'){new Notification('PS Price Watch: target hit',{body:`${g.name} is ₹${g.current}, at or below your ₹${g.target} target.`})}}
+$('games').addEventListener('click',e=>{
+ const b=e.target.closest('button[data-action]');if(!b)return;const g=games.find(x=>x.id===b.dataset.id);if(!g)return;
+ switch(b.dataset.action){
+ case 'store':window.open(g.url,'_blank','noopener');break;
+ case 'edit':openForm(g);break;
+ case 'delete':if(confirm(`Remove ${g.name} from your wishlist?`)){games=games.filter(x=>x.id!==g.id);save()}break;
+ case 'price':{
+ const val=prompt(`Enter the latest Indian PS Store price for ${g.name} (INR):`,g.current);if(val===null||val.trim()===''||!Number.isFinite(Number(val))||Number(val)<0)return;
+ g.previous=g.current;g.history.push({date:new Date().toISOString(),price:g.current});g.current=Number(val);g.history.push({date:new Date().toISOString(),price:g.current});if(!g.low||g.current<g.low)g.low=g.current;save();if(below(g))notifyDeal(g);break}
+ case 'history':$('historyTitle').textContent=g.name+' · Price history';$('historyContent').innerHTML=(g.history||[]).slice().reverse().map(h=>`<div class="history-row"><span>${h.event?escapeHtml(h.event):new Date(h.date).toLocaleString()}</span><b>${h.price!=null?money(h.price):''}</b></div>`).join('')||'<p>No price updates yet.</p>';$('historyDialog').showModal();break;
+ }
+});
+$('closeHistory').onclick=()=>$('historyDialog').close();$('search').oninput=render;
+$('notifyBtn').onclick=async()=>{if(!('Notification'in window)){alert('Notifications are not supported in this browser.');return}const p=await Notification.requestPermission();render();alert(p==='granted'?'Alerts enabled for price updates made while this app is open.':'Notifications were not enabled.')};
+$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(games,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ps-price-watch-backup.json';a.click();URL.revokeObjectURL(a.href)};
+$('importBtn').onclick=()=>$('importFile').click();
+$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw Error();if(confirm('Replace your current wishlist with imported data?')){games=data;save()}}catch{alert('That file is not a valid PS Price Watch backup.')}e.target.value=''};
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+render();
+</script>
+</body></html>
